@@ -1,0 +1,36 @@
+# Конфигурация для удаленных Docker хостов
+http:
+  routers:
+    # Пример роутера для удаленного хоста
+    remote-host-1:
+      rule: "Host(`host1.yourdomain.com`)"
+      service: remote-host-1-service
+      tls:
+        certResolver: letsencrypt
+    remote-host-2:
+      rule: "Host(`host2.yourdomain.com`)"
+      service: remote-host-2-service
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    remote-host-1-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.100:8080"  # IP вашей первой VM
+    remote-host-2-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.101:8080"  # IP вашей второй VM
+
+# Middleware для безопасности
+  middlewares:
+    security-headers:
+      headers:
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+        customResponseHeaders:
+          X-Frame-Options: "SAMEORIGIN"
+          X-Content-Type-Options: "nosniff"
+          X-XSS-Protection: "1; mode=block"
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains"
