@@ -12,9 +12,9 @@
 ### 1. Центральная машина
 
 ```bash
-# Настройка конфигурации
-cp env.example .env
-nano .env  # Измените домены и email
+# Клонируйте репозиторий
+git clone https://github.com/Mark-shabl/Docker_Portainer_Traefik.git
+cd Docker_Portainer_Traefik
 
 # Создание директорий
 mkdir -p letsencrypt traefik/dynamic
@@ -23,7 +23,13 @@ mkdir -p letsencrypt traefik/dynamic
 docker-compose up -d
 ```
 
-### 2. Сервисные машины
+### 2. Доступ к админкам
+
+- **Portainer**: `http://YOUR_IP:9000`
+- **Traefik Dashboard**: `http://YOUR_IP:8080`
+- **Traefik API**: `http://YOUR_IP:8080/api/rawdata`
+
+### 3. Сервисные машины
 
 ```bash
 # Настройка Docker для удаленного доступа
@@ -37,17 +43,15 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 sudo ufw allow 2375/tcp
-
-# Запуск сервисов
-docker-compose -f docker-compose-services.yml up -d
 ```
 
-### 3. Подключение к Portainer
+### 4. Подключение к Portainer
 
-1. Откройте `https://portainer.yourdomain.com`
-2. Settings → Environments → Add environment
-3. Docker → Remote
-4. URL: `tcp://IP_СЕРВИСНОЙ_МАШИНЫ:2375`
+1. Откройте `http://YOUR_IP:9000`
+2. Создайте администратора
+3. Settings → Environments → Add environment
+4. Docker → Remote
+5. URL: `tcp://IP_СЕРВИСНОЙ_МАШИНЫ:2375`
 
 ## 🔧 Лейблы Traefik
 
@@ -58,40 +62,33 @@ labels:
   - "traefik.enable=true"
   - "traefik.http.routers.myapp.rule=Host(`myapp.yourdomain.com`)"
   - "traefik.http.routers.myapp.entrypoints=websecure"
-  - "traefik.http.routers.myapp.tls.certresolver=letsencrypt"
   - "traefik.http.services.myapp.loadbalancer.server.port=8080"
 ```
 
 ## 📁 Структура проекта
 
 ```
-├── docker-compose.yml              # Portainer + Traefik (центральная машина)
-├── docker-compose-services.yml     # Пример сервисов (сервисные машины)
+├── docker-compose.yml              # Portainer + Traefik
+├── docker-compose-services.yml     # Пример сервисов
 ├── traefik/                        # Конфигурация Traefik
 ├── letsencrypt/                    # SSL сертификаты
 ├── env.example                     # Пример конфигурации
-├── INSTRUCTIONS.md                 # Подробные инструкции
+├── SSL-SETUP.md                    # Настройка SSL
 └── README.md                       # Этот файл
 ```
 
 ## 🌐 Доступ
 
-- **Portainer**: `https://portainer.yourdomain.com`
-- **Traefik Dashboard**: `https://traefik.yourdomain.com`
-- **Ваши сервисы**: `https://myapp.yourdomain.com`
+- **Portainer**: `http://YOUR_IP:9000`
+- **Traefik Dashboard**: `http://YOUR_IP:8080`
+- **Ваши сервисы**: `http://YOUR_IP` (через Traefik)
 
-## 📖 Подробные инструкции
+## 🔐 SSL сертификаты
 
-Смотрите [INSTRUCTIONS.md](INSTRUCTIONS.md) для детальной настройки.
-
-## 🔒 Безопасность
-
-- Все соединения зашифрованы TLS
-- Автоматические SSL сертификаты от Let's Encrypt
-- Ограничьте доступ к порту 2375 файрволом
+Для добавления SSL сертификатов смотрите [SSL-SETUP.md](SSL-SETUP.md)
 
 ## 🆘 Решение проблем
 
 1. Проверьте логи: `docker-compose logs -f`
-2. Убедитесь в правильности DNS записей
-3. Проверьте доступность портов 80, 443, 2375
+2. Проверьте статус: `docker-compose ps`
+3. Проверьте порты: `netstat -tlnp | grep :9000`

@@ -7,34 +7,25 @@ services:
     restart: unless-stopped
     command:
       - --api.dashboard=true
-      - --api.insecure=false
+      - --api.insecure=true  # HTTP доступ для работы по IP
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
-      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-your-email@example.com}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       - --log.level=INFO
       - --accesslog=true
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"  # Traefik dashboard
+      - "8080:8080"  # Traefik API и Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik:/etc/traefik/dynamic
       - ./letsencrypt:/letsencrypt
     networks:
       - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN:-traefik.yourdomain.com}`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefik.service=api@internal"
 
   portainer:
     image: portainer/portainer-ce:latest
@@ -44,15 +35,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
+    ports:
+      - "9000:9000"  # Прямой доступ по IP
     networks:
       - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_DOMAIN:-portainer.yourdomain.com}`)"
-      - "traefik.http.routers.portainer.entrypoints=websecure"
-      - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
-      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-
 
 networks:
   traefik:
