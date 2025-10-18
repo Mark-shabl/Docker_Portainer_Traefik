@@ -20,8 +20,8 @@ services:
       - --log.level=INFO
       - --accesslog=true
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80"      # HTTP (внутренний порт 80)
+      - "443:443"    # HTTPS (внутренний порт 443)
       - "8080:8080"  # Traefik API и Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -29,6 +29,12 @@ services:
       - ./letsencrypt:/letsencrypt
     networks:
       - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN:-traefik.yourdomain.com}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
 
   portainer:
     image: portainer/portainer-ce:latest
@@ -44,7 +50,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_DOMAIN:-portainer.yourdomain.com}`) || Host(`localhost`)"
+      - "traefik.http.routers.portainer.rule=Host(`${PORTAINER_DOMAIN:-portainer.yourdomain.com}`)"
       - "traefik.http.routers.portainer.entrypoints=websecure"
       - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
