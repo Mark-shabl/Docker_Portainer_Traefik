@@ -1,0 +1,23 @@
+# Environment files
+.env
+
+# SSL certificates
+letsencrypt/
+
+# Docker volumes
+portainer_data/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
